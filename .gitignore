@@ -1,0 +1,8 @@
+.env.local
+.env
+Pipfile
+Pipfile.lock
+**/migrations/
+db.sqlite3
+**/__pycache__/
+**/.ipynb_checkpoints/

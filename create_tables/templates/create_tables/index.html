@@ -1,0 +1,81 @@
+{% extends 'create_tables/base_generic.html' %}
+{% block title %}Main page{% endblock %}
+{% block content %}
+<!-- Основной контейнер таблицы -->
+    <div class="table" style="margin-left: 100px; width: 40%;">
+        <h1>Pair Buy</h1>
+    <!-- Кнопка для переключения отображения полной таблицы.-->
+        <span class="toggle-button" style="cursor: pointer;">Show full</span>
+    <!-- Контейнер для содержимого таблицы.-->
+        <div class="table-content">
+            <table style="table-layout: fixed; ">
+                <tr>
+                    <th>Symbol</th>
+                    <th>Price</th>
+                    <th>Exchange</th>
+                </tr>
+            <!-- Цикл для отображения данных валютных пар. -->
+                    {% for element in content %}
+                        <tr data-symbol="{{ element.symbol }}">
+                            <td>{{ element.symbol }}</td>
+                            <td>{{ element.buying_price }}</td>
+                            <td>{{ element.exchange }}</td>
+                        </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Функция для форматирования цены.
+            function formatPrice(price) {
+                let numPrice = Number(price);
+                return numPrice.toLocaleString('fullwide', {useGrouping: false, maximumFractionDigits: 20});
+            }
+        
+            function fetchData() {
+                // Отправка AJAX-запроса на сервер.
+            fetch("{% url 'home' %}", {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Обновление данных в таблице.
+                data.forEach(item => {
+                    // Поиск строки таблицы по символу валютной пары.
+                    let row = document.querySelector(`.table-content table tr[data-symbol="${item.symbol}"]`);
+                    if (row) {
+                        // Обновление цены в соответствующей ячейке.
+                        let priceCell = row.querySelector('td:nth-child(2)');
+                        if (priceCell) {
+                          priceCell.textContent = formatPrice(item.buying_price);
+                        }
+                    }
+                });
+            })
+            .catch(error => console.log('Error fetching data:', error));
+            }
+        
+            // Изначально скрываем строки таблицы, начиная с 12-й.
+            document.querySelectorAll(".table-content tr:nth-child(n+12)").forEach(row => row.style.display = 'none');
+            // Обработчик клика на кнопку переключения.
+            document.querySelector(".toggle-button").addEventListener('click', function() {
+                $(".table-content tr:nth-child(n+12)").toggle();
+                // Меняем текст кнопки в зависимости от состояния видимости строк.
+                if ($(".table-content tr:nth-child(n+12)").is(":visible")) {
+                    $(this).text("Show less");
+                } else {
+                    $(this).text("Show full");
+                }
+            });
+            // Первоначальная загрузка данных.
+            fetchData();
+            // Установка интервала для периодического обновления данных.
+            setInterval(fetchData, 10000); // Каждые 10 секунд
+        });
+        </script>
+{% endblock %}
